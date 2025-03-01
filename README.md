@@ -57,7 +57,7 @@ Here's how to get GoProxy CFWorker up and running:
    Use Wrangler to publish your worker:
 
    ```bash
-   wrangler publish
+   wrangler deploy
    ```
 
    This command will deploy the worker to Cloudflare's network.
@@ -114,11 +114,58 @@ export const repos = {
 
 *Important*: For production environments, consider using Cloudflare Secrets to store sensitive authentication credentials instead of hardcoding them in projects.js.
 
+### Example with `go.kybex.workers.dev`
 
+We've deployed a live instance of this worker at `https://go.kybex.workers.dev`. You can use it in two primary ways:
+
+*   **As a `GOPROXY` server**
+*   **For custom module `go-import` routing (similar to `gopkg.in`)**
+
+#### Using as a `GOPROXY` Server
+
+1.  **Set `GOPROXY`:**
+
+    ```bash
+    export GOPROXY=https://go.kybex.workers.dev
+    ```
+
+    This configures your Go environment to use `go.kybex.workers.dev` as its module proxy.
+
+2.  **`go get` Examples:**
+
+    After setting `GOPROXY`, any `go get` command will retrieve modules via `go.kybex.workers.dev`, if applicable.
+
+#### Using for Custom Module `go-import` Routing
+
+0.  You can use this worker for routing either public or private modules. When routing private modules, you **must** add your worker's domain to the `GOPRIVATE` environment variable.
+
+    For instance, if you want to route your private module `gitlab.com/companyx/secretlib` to `go.kybex.workers.dev/companyx/xlib`, you would first run:
+
+    ```bash
+    export GOPRIVATE="go.kybex.workers.dev/*"
+    ```
+
+    This tells the Go toolchain that modules from `go.kybex.workers.dev` are to be considered private.
+
+1.  **`go get` Examples:**
+
+    With the necessary environment variables set (either `GOPROXY` or `GOPRIVATE`), use `go get` to retrieve modules through the custom routing:
+
+    ```bash
+    go get go.kybex.workers.dev/amirarsalan/withoutAuth
+    go get go.kybex.workers.dev/amirarsalan/withAuth
+    go get go.kybex.workers.dev/companyx/xlib
+    ```
+
+    These commands will download the specified modules according to the routing rules defined in the `src/projects.js` configuration of the deployed worker.
 
 ## Contributing
 
 We welcome contributions! Feel free to open issues for bug reports, feature requests, or submit pull requests with improvements.
+
+## Reference
+* https://go.dev/ref/mod#goproxy-protocol
+* https://go.dev/doc/modules/version-numbers
 
 ## License
 
